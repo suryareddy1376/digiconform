@@ -211,56 +211,6 @@ function Registration() {
     });
   }, []);
 
-  // Fill mock data for testing
-  const fillMockData = useCallback(() => {
-    const mockData: TeamData = {
-      leader: {
-        fullName: 'Rajesh Kumar',
-        registrationNumber: '9912324501001',
-        gender: 'Male',
-        section: '24S01',
-        whatsappNumber: '9876543210',
-        hostelName: 'Block A',
-        roomNumber: '101',
-      },
-      member1: {
-        fullName: 'Priya Sharma',
-        registrationNumber: '9912324501002',
-        gender: 'Female',
-        section: '24S01',
-        whatsappNumber: '9876543211',
-        hostelName: 'Block B',
-        roomNumber: '202',
-      },
-      member2: {
-        fullName: 'Arun Patel',
-        registrationNumber: '9912324501003',
-        gender: 'Male',
-        section: '24S01',
-        whatsappNumber: '9876543212',
-        hostelName: 'Block A',
-        roomNumber: '103',
-      },
-      member3: {
-        fullName: 'Sneha Reddy',
-        registrationNumber: '9912324501004',
-        gender: 'Female',
-        section: '24S01',
-        whatsappNumber: '9876543213',
-        hostelName: 'Block C',
-        roomNumber: '304',
-      },
-    };
-    setTeam(mockData);
-    setErrors({});
-    setOpenAccordions({
-      leader: true,
-      member1: true,
-      member2: true,
-      member3: true,
-    });
-  }, []);
-
   const memberConfig: Array<{ type: MemberType; title: string; icon: string }> = [
     { type: 'leader', title: 'Team Leader', icon: '👑' },
     { type: 'member1', title: 'Team Member 1', icon: '👤' },
