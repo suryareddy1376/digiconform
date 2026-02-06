@@ -62,7 +62,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
                     onChange={(e) => onChange(memberType, 'registrationNumber', e.target.value)}
                     onBlur={() => onBlur(memberType, 'registrationNumber')}
                     className={inputClasses('registrationNumber')}
-                    placeholder="e.g., 9912324501001"
+                    placeholder="99240040000"
                 />
                 {getFieldError('registrationNumber') && (
                     <p className="mt-1 text-sm text-red-500 flex items-center gap-1">

@@ -32,7 +32,7 @@ export const createEmptyParticipant = (): Participant => ({
     fullName: '',
     registrationNumber: '',
     gender: '',
-    section: '24S01',
+    section: '',
     whatsappNumber: '',
     hostelName: '',
     roomNumber: '',

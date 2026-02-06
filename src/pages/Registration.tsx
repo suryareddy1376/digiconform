@@ -44,6 +44,9 @@ function Registration() {
     member3: false,
   });
 
+  // Team Name state
+  const [teamName, setTeamName] = useState<string>('');
+
   // Handle field change
   const handleFieldChange = useCallback((
     memberType: MemberType,
@@ -134,6 +137,7 @@ function Registration() {
         .insert({
           event_name: 'DIGICON 4.0',
           department: 'ECE',
+          team_name: teamName,
 
           // Team Leader
           leader_full_name: team.leader.fullName,
@@ -202,6 +206,7 @@ function Registration() {
     setErrors({});
     setStatus('idle');
     setErrorMessage('');
+    setTeamName('');
 
     setOpenAccordions({
       leader: true,
@@ -237,6 +242,20 @@ function Registration() {
               <p className="text-gray-600">
                 Fill in the details for all 4 team members to complete registration
               </p>
+            </div>
+
+            {/* Team Name Field */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-indigo-100">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Team Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 outline-none border-gray-200 bg-gray-50 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/20"
+                placeholder="Enter your team name"
+              />
             </div>
 
             {/* Team Members Accordions */}

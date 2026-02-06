@@ -8,6 +8,7 @@ interface TeamRegistration {
     id: string;
     event_name: string;
     department: string;
+    team_name: string;
     leader_full_name: string;
     leader_registration_number: string;
     leader_gender: string;
@@ -67,6 +68,28 @@ export default function Dashboard() {
         }
     };
 
+    // Reset list state and handler
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [resetting, setResetting] = useState(false);
+
+    const handleResetList = async () => {
+        try {
+            setResetting(true);
+            const { error } = await supabase
+                .from('team_registrations')
+                .delete()
+                .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
+
+            if (error) throw error;
+            setRegistrations([]);
+            setShowResetConfirm(false);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to reset list');
+        } finally {
+            setResetting(false);
+        }
+    };
+
     const handleSignOut = async () => {
         await signOut();
         navigate('/admin/login');
@@ -76,6 +99,7 @@ export default function Dashboard() {
         // Transform data for Excel export
         const excelData = registrations.map((reg, index) => ({
             'S.No': index + 1,
+            'Team Name': reg.team_name || '',
             'Submitted At': new Date(reg.submitted_at).toLocaleString(),
             'Leader Name': reg.leader_full_name,
             'Leader Reg No': reg.leader_registration_number,
@@ -185,8 +209,58 @@ export default function Dashboard() {
                             </svg>
                             Export to Excel
                         </button>
+                        <button
+                            onClick={() => setShowResetConfirm(true)}
+                            disabled={registrations.length === 0}
+                            className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Reset List
+                        </button>
                     </div>
                 </div>
+
+                {/* Reset Confirmation Dialog */}
+                {showResetConfirm && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4">
+                            <div className="text-center">
+                                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-800 mb-2">Reset All Registrations?</h3>
+                                <p className="text-gray-600 mb-6">This will permanently delete all {registrations.length} team registrations. This action cannot be undone.</p>
+                                <div className="flex gap-4 justify-center">
+                                    <button
+                                        onClick={() => setShowResetConfirm(false)}
+                                        disabled={resetting}
+                                        className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleResetList}
+                                        disabled={resetting}
+                                        className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-xl transition-all flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                        {resetting ? (
+                                            <>
+                                                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                                Deleting...
+                                            </>
+                                        ) : (
+                                            'Yes, Reset All'
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Error Message */}
                 {error && (
@@ -218,6 +292,7 @@ export default function Dashboard() {
                                 <thead className="bg-gray-50 border-b border-gray-200">
                                     <tr>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">S.No</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Team Name</th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Team Leader</th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Member 1</th>
                                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Member 2</th>
@@ -229,6 +304,7 @@ export default function Dashboard() {
                                     {registrations.map((reg, index) => (
                                         <tr key={reg.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 text-sm text-gray-900 font-medium">{index + 1}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-900 font-medium">{reg.team_name || '-'}</td>
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-medium text-gray-900">{reg.leader_full_name}</div>
                                                 <div className="text-xs text-gray-500">{reg.leader_registration_number}</div>
