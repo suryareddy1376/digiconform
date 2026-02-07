@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Header from '../components/Header';
 import Accordion from '../components/Accordion';
 import ParticipantCard from '../components/ParticipantCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SuccessMessage from '../components/SuccessMessage';
+import { supabase } from '../lib/supabase';
 import type {
   Participant,
   TeamData,
@@ -25,6 +26,37 @@ interface OpenAccordions {
 }
 
 function Registration() {
+  // Registration status
+  const [registrationOpen, setRegistrationOpen] = useState<boolean | null>(null);
+  const [statusLoading, setStatusLoading] = useState(true);
+
+  // Fetch registration status on mount
+  useEffect(() => {
+    const fetchRegistrationStatus = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('app_settings')
+          .select('registration_open')
+          .eq('id', 1)
+          .single();
+
+        if (error) {
+          // If no settings exist, assume open
+          setRegistrationOpen(true);
+        } else {
+          setRegistrationOpen(data?.registration_open ?? true);
+        }
+      } catch (err) {
+        console.error('Failed to fetch registration status:', err);
+        setRegistrationOpen(true); // Default to open on error
+      } finally {
+        setStatusLoading(false);
+      }
+    };
+
+    fetchRegistrationStatus();
+  }, []);
+
   // Form state
   const [team, setTeam] = useState<TeamData>({
     leader: createEmptyParticipant(),
@@ -228,7 +260,29 @@ function Registration() {
       <Header />
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        {status === 'success' ? (
+        {/* Loading State */}
+        {statusLoading ? (
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center animate-fade-in">
+            <div className="animate-spin w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-gray-500">Loading...</p>
+          </div>
+        ) : !registrationOpen ? (
+          /* Registrations Closed State */
+          <div className="bg-white rounded-2xl shadow-lg p-12 text-center animate-fade-in">
+            <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Registrations Closed</h2>
+            <p className="text-gray-600 text-lg max-w-md mx-auto">
+              Thank you for your interest in DIGICON 4.0! Unfortunately, team registrations are currently closed.
+            </p>
+            <p className="text-gray-500 mt-4 text-sm">
+              Please check back later or contact the organizers for more information.
+            </p>
+          </div>
+        ) : status === 'success' ? (
           <div className="card animate-fade-in">
             <SuccessMessage onReset={handleReset} />
           </div>

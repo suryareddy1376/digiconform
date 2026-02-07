@@ -47,8 +47,58 @@ export default function Dashboard() {
     const { user, signOut } = useAuth();
     const navigate = useNavigate();
 
+    // Registration toggle state
+    const [registrationOpen, setRegistrationOpen] = useState(true);
+    const [toggleLoading, setToggleLoading] = useState(false);
+
+    // Fetch registration status
+    const fetchRegistrationStatus = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('app_settings')
+                .select('registration_open')
+                .eq('id', 1)
+                .single();
+
+            if (error) {
+                // If no settings exist, create default
+                if (error.code === 'PGRST116') {
+                    await supabase.from('app_settings').insert({ id: 1, registration_open: true });
+                    setRegistrationOpen(true);
+                } else {
+                    throw error;
+                }
+            } else {
+                setRegistrationOpen(data?.registration_open ?? true);
+            }
+        } catch (err) {
+            console.error('Failed to fetch registration status:', err);
+        }
+    };
+
+    // Toggle registration status
+    const handleToggleRegistration = async () => {
+        try {
+            setToggleLoading(true);
+            const newStatus = !registrationOpen;
+
+            const { error } = await supabase
+                .from('app_settings')
+                .update({ registration_open: newStatus, updated_at: new Date().toISOString() })
+                .eq('id', 1);
+
+            if (error) throw error;
+            setRegistrationOpen(newStatus);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to toggle registration status');
+        } finally {
+            setToggleLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchRegistrations();
+        fetchRegistrationStatus();
     }, []);
 
     const fetchRegistrations = async () => {
@@ -218,6 +268,27 @@ export default function Dashboard() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                             Reset List
+                        </button>
+                        <button
+                            onClick={handleToggleRegistration}
+                            disabled={toggleLoading}
+                            className={`px-6 py-3 ${registrationOpen
+                                ? 'bg-gradient-to-r from-orange-500 to-amber-500'
+                                : 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                                } text-white rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                            {toggleLoading ? (
+                                <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                            ) : registrationOpen ? (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                            ) : (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            )}
+                            {registrationOpen ? 'Close Registrations' : 'Open Registrations'}
                         </button>
                     </div>
                 </div>

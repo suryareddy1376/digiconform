@@ -41,3 +41,50 @@ ON team_registrations
 FOR INSERT
 TO anon, authenticated
 WITH CHECK (true);
+
+-- =============================================
+-- App Settings Table for Registration Toggle
+-- =============================================
+
+-- Create app_settings table
+CREATE TABLE IF NOT EXISTS app_settings (
+    id INT PRIMARY KEY DEFAULT 1,
+    registration_open BOOLEAN NOT NULL DEFAULT true,
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT single_row CHECK (id = 1)
+);
+
+-- Insert default row
+INSERT INTO app_settings (id, registration_open) 
+VALUES (1, true) 
+ON CONFLICT (id) DO NOTHING;
+
+-- Enable RLS
+ALTER TABLE app_settings ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies first (to avoid conflicts)
+DROP POLICY IF EXISTS "Allow public read app_settings" ON app_settings;
+DROP POLICY IF EXISTS "Allow authenticated update app_settings" ON app_settings;
+DROP POLICY IF EXISTS "Allow authenticated insert app_settings" ON app_settings;
+
+-- Policy to allow anyone to read settings (for registration form)
+CREATE POLICY "Allow public read app_settings"
+ON app_settings
+FOR SELECT
+TO anon, authenticated
+USING (true);
+
+-- Policy to allow authenticated users to update settings (for admin dashboard)
+CREATE POLICY "Allow authenticated update app_settings"
+ON app_settings
+FOR UPDATE
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+-- Policy to allow authenticated users to insert settings (for admin dashboard)
+CREATE POLICY "Allow authenticated insert app_settings"
+ON app_settings
+FOR INSERT
+TO authenticated
+WITH CHECK (true);
